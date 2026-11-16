@@ -1,4 +1,4 @@
-const CACHE_NAME = 'launcher-ic-v1';
+const CACHE_NAME = 'launcher-ic-v2';
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
