@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="I&C UMRO JP-1">
+  <meta name="theme-color" content="#0F4C81">
+  
+  <!-- Ikon Khas C&I (Pressure Gauge / Transmitter) untuk Android, iOS & Tab Browser -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='112' fill='%230F4C81'/><circle cx='256' cy='256' r='165' fill='%230F172A' stroke='%2338BDF8' stroke-width='20'/><path d='M136 256 A120 120 0 0 1 376 256' fill='none' stroke='%230284C7' stroke-width='24' stroke-linecap='round'/><path d='M310 148 A120 120 0 0 1 376 256' fill='none' stroke='%23F59E0B' stroke-width='24' stroke-linecap='round'/><line x1='256' y1='256' x2='335' y2='175' stroke='%23EF4444' stroke-width='18' stroke-linecap='round'/><circle cx='256' cy='256' r='26' fill='%23F8FAFC'/><rect x='226' y='405' width='60' height='36' rx='6' fill='%2394A3B8'/></svg>">
+  <link rel="apple-touch-icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='112' fill='%230F4C81'/><circle cx='256' cy='256' r='165' fill='%230F172A' stroke='%2338BDF8' stroke-width='20'/><path d='M136 256 A120 120 0 0 1 376 256' fill='none' stroke='%230284C7' stroke-width='24' stroke-linecap='round'/><path d='M310 148 A120 120 0 0 1 376 256' fill='none' stroke='%23F59E0B' stroke-width='24' stroke-linecap='round'/><line x1='256' y1='256' x2='335' y2='175' stroke='%23EF4444' stroke-width='18' stroke-linecap='round'/><circle cx='256' cy='256' r='26' fill='%23F8FAFC'/><rect x='226' y='405' width='60' height='36' rx='6' fill='%2394A3B8'/></svg>">
+  
+  <link rel="manifest" href="manifest.json">
+  <title>LAUNCHER I&C</title>
+
+  <style>
+    :root {
+      --primary: #0F4C81; --secondary: #0284C7; --accent: #F59E0B;
+      --bg-light: #F0F4F8; --glass-bg: rgba(255, 255, 255, 0.75);
+      --glass-border: rgba(255, 255, 255, 0.6); --text-main: #1E293B;
+      --text-muted: #475569; --sidebar-width: 300px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0; font-family: 'Segoe UI', Arial, sans-serif;
+      color: var(--text-main); background-color: var(--bg-light);
+      background-image: linear-gradient(rgba(15, 76, 129, 0.07) 1px, transparent 1px), linear-gradient(90deg, rgba(15, 76, 129, 0.07) 1px, transparent 1px);
+      background-size: 25px 25px; background-attachment: fixed; overflow-x: hidden; font-size: 15px;
+    }
+
+    .app-container { display: flex; min-height: 100vh; }
+
+    .sidebar {
+      width: var(--sidebar-width); background: linear-gradient(180deg, rgba(241, 245, 249, 0.9), rgba(226, 232, 240, 0.9));
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-right: 1px solid var(--glass-border);
+      box-shadow: 2px 0 15px rgba(15, 76, 129, 0.08); flex-shrink: 0; display: flex; flex-direction: column;
+      transition: transform 0.3s ease; z-index: 100;
+    }
+
+    .sidebar-header { padding: 25px 20px; background: var(--primary); color: white; border-bottom: 3px solid var(--secondary); }
+    .brand { display: flex; align-items: center; gap: 14px; }
+    .brand h2 { margin: 0; font-size: 20px; font-weight: 700; letter-spacing: 0.5px; }
+    .brand-icon { font-size: 24px; }
+    .sys-status { margin-top: 8px; font-size: 12px; color: #6EE7B7; display: flex; align-items: center; gap: 6px; font-family: monospace; font-weight: bold;}
+    .pulse { width: 8px; height: 8px; background-color: #10B981; border-radius: 50%; animation: blink 1.5s infinite; }
+    @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+
+    .user-badge { background: #020617; padding: 10px 20px; text-align: center; border-bottom: 1px solid #1e293b; }
+    .user-role { color: #38BDF8; font-family: monospace; font-size: 12px; font-weight: bold; letter-spacing: 1px; }
+    .role-admin { color: #F59E0B; }
+    .role-user { color: #38BDF8; }
+
+    .telemetry-panel { background: #0F172A; color: #38BDF8; padding: 15px 20px; font-family: 'Courier New', Courier, monospace; font-size: 13px; border-bottom: 2px solid var(--primary); }
+    .telemetry-row { display: flex; justify-content: space-between; margin-bottom: 5px; }
+    .telemetry-row:last-child { margin-bottom: 0; }
+    .mono-value { color: #A7F3D0; font-weight: bold; }
+
+    .sidebar-menu { overflow-y: auto; flex-grow: 1; padding: 15px 0; }
+    .menu-group { margin-bottom: 4px; }
+    .menu-title { padding: 16px 20px; cursor: pointer; font-weight: 700; font-size: 15px; display: flex; justify-content: space-between; align-items: center; transition: all 0.2s; color: var(--primary); }
+    .menu-title:hover { background: rgba(15, 76, 129, 0.08); }
+    .menu-title::after { content: '▼'; font-size: 12px; transition: transform 0.3s; color: var(--text-muted); }
+    .menu-group.active .menu-title::after { transform: rotate(180deg); color: var(--primary); }
+
+    .menu-title.home-menu::after { content: ''; }
+    .menu-title.home-menu { border-bottom: 1px solid rgba(15, 76, 129, 0.1); margin-bottom: 10px; }
+    .menu-title.home-menu.active-home { background: rgba(15, 76, 129, 0.1); border-left: 4px solid var(--primary); }
+
+    .submenu { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; background: rgba(255, 255, 255, 0.5); }
+    .menu-group.active .submenu { max-height: 2000px; }
+    .submenu-title { padding: 14px 20px 14px 35px; cursor: pointer; font-size: 14px; font-weight: 600; color: var(--text-main); display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed rgba(15, 76, 129, 0.1); transition: background 0.2s; }
+    .submenu-title:hover { background: white; }
+    .submenu-title::after { content: '▼'; font-size: 11px; transition: transform 0.3s; }
+    .submenu-group.active .submenu-title::after { transform: rotate(180deg); }
+
+    .sub-submenu { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; background: white; }
+    .submenu-group.active .sub-submenu { max-height: 800px; }
+    .sub-submenu-item { padding: 12px 20px 12px 50px; cursor: pointer; display: block; color: var(--text-muted); transition: all 0.2s; font-size: 14px; font-weight: 500; }
+    .sub-submenu-item:hover, .sub-submenu-item.active { background: var(--bg-light); color: var(--primary); border-left: 3px solid var(--secondary); padding-left: 47px; font-weight: bold; }
+
+    /* HEADER & LOGIN BUTTON */
+    .main-content { flex-grow: 1; display: flex; flex-direction: column; min-width: 0; }
+    
+    .header { 
+      background: transparent; padding: 15px 25px 0; 
+      display: flex; justify-content: flex-end; align-items: center; 
+    }
+    .mobile-menu-btn { display: none; background: white; border: 1px solid var(--primary); border-radius: 6px; padding: 8px 12px; font-size: 20px; cursor: pointer; color: var(--primary); }
+    
+    .auth-btn {
+      background: white; border: 2px solid var(--primary); color: var(--primary);
+      padding: 8px 16px; border-radius: 20px; font-weight: bold; font-size: 13px;
+      cursor: pointer; transition: all 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+    .auth-btn:hover { background: var(--primary); color: white; }
+    .logout-btn { border-color: #ef4444; color: #ef4444; }
+    .logout-btn:hover { background: #ef4444; color: white; }
+
+    @media (max-width: 768px) {
+      .header { justify-content: space-between; }
+      .mobile-menu-btn { display: block; }
+    }
+
+    main { padding: 25px 35px 35px; max-width: 1200px; margin: 0 auto; width: 100%; z-index: 1; }
+
+    /* MODAL LOGIN */
+    .modal-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);
+      z-index: 1000; display: flex; justify-content: center; align-items: center;
+    }
+    .modal-content {
+      background: white; padding: 30px; border-radius: 12px; width: 90%; max-width: 350px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3); border-top: 5px solid var(--primary);
+    }
+    .modal-input {
+      width: 100%; padding: 12px; margin-bottom: 15px; border: 2px solid #E2E8F0;
+      border-radius: 6px; font-size: 14px; transition: border 0.3s;
+    }
+    .modal-input:focus { border-color: var(--secondary); outline: none; }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px; }
+    .btn-cancel { padding: 10px 15px; border: none; background: #F1F5F9; color: #475569; border-radius: 6px; cursor: pointer; font-weight: 600;}
+    .btn-submit { padding: 10px 20px; border: none; background: var(--primary); color: white; border-radius: 6px; cursor: pointer; font-weight: bold;}
+
+    .welcome-message { text-align: center; padding: 45px 30px; background: var(--glass-bg); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border-radius: 12px; border: 1px solid var(--glass-border); box-shadow: 0 4px 20px rgba(15, 76, 129, 0.05); }
+    .welcome-message h2 { margin: 0; color: var(--primary); font-size: 26px; letter-spacing: 1px; }
+    .welcome-message p { color: var(--text-muted); font-size: 16px; margin-top: 15px; }
+
+    #page-title { color: var(--primary); font-size: 28px; margin: 0 0 5px; font-weight: 700; }
+    #page-subtitle { color: var(--text-muted); font-size: 15px; font-weight: 600; margin: 0; letter-spacing: 0.5px; }
+    .pid-line { height: 3px; width: 100%; background: repeating-linear-gradient(90deg, var(--secondary), var(--secondary) 10px, transparent 10px, transparent 15px); margin: 15px 0; opacity: 0.7; }
+
+    .toolbar { display: flex; justify-content: flex-end; margin-bottom: 30px; }
+    .search { width: min(100%, 350px); padding: 14px 18px; font-size: 15px; background: white; border: 2px solid #CBD5E1; border-radius: 8px; color: var(--text-main); font-weight: 500; transition: all 0.3s; box-shadow: 0 2px 10px rgba(0,0,0,0.03); }
+    .search:focus { outline: none; border-color: var(--secondary); box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.2); }
+
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 25px; }
+    .card { display: flex; flex-direction: column; padding: 25px; background: var(--glass-bg); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid var(--glass-border); border-top: 5px solid var(--primary); border-radius: 12px; box-shadow: 0 6px 15px rgba(15, 76, 129, 0.08); transition: transform 0.2s, box-shadow 0.2s; position: relative; }
+    
+    .card.inactive { opacity: 0.6; filter: grayscale(50%); border-top-color: #94A3B8; }
+    .card:hover { transform: translateY(-4px); box-shadow: 0 12px 25px rgba(15, 76, 129, 0.15); border-top-color: var(--secondary); }
+    .card.inactive:hover { border-top-color: #94A3B8; }
+
+    .card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 15px; }
+
+    .app-icon { width: 60px; height: 60px; border-radius: 10px; display: grid; place-items: center; font-size: 30px; background: #F8FAFC; border: 1px solid #E2E8F0; box-shadow: inset 0 2px 5px rgba(0,0,0,0.05); }
+    .category { padding: 6px 12px; background: #E0F2FE; color: var(--secondary); border: 1px solid #BAE6FD; border-radius: 6px; font-size: 11px; font-family: monospace; font-weight: bold; letter-spacing: 0.5px; }
+
+    .card h3 { font-size: 19px; margin: 20px 0 10px; color: var(--primary); font-weight: 700; }
+    .description { font-size: 14px; color: var(--text-muted); margin: 0 0 25px; flex: 1; line-height: 1.6; }
+
+    .open-link { display: block; padding: 14px; background: var(--primary); color: white; text-decoration: none; border-radius: 6px; text-align: center; font-size: 14px; font-weight: bold; letter-spacing: 0.5px; border: none; transition: background 0.2s; cursor: pointer; }
+    .open-link:hover { background: var(--secondary); }
+    .open-link.disabled { background: #CBD5E1; color: #64748B; cursor: not-allowed; }
+    .open-link.disabled:hover { background: #CBD5E1; }
+
+    /* Admin Toggle */
+    .admin-controls { margin-top: 15px; padding-top: 15px; border-top: 1px dashed #CBD5E1; display: flex; justify-content: space-between; align-items: center; }
+    .toggle-label { font-size: 12px; font-weight: bold; color: var(--text-muted); font-family: monospace; letter-spacing: 0.5px; }
+    .toggle-switch { position: relative; display: inline-block; width: 44px; height: 24px; }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #CBD5E1; transition: .4s; border-radius: 24px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1); }
+    .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+    input:checked + .slider { background-color: #10B981; } 
+    input:focus + .slider { box-shadow: 0 0 1px #10B981; }
+    input:checked + .slider:before { transform: translateX(20px); }
+
+    .empty, .status { text-align: center; color: var(--text-muted); padding: 30px; font-size: 16px; font-weight: 600; }
+    .saving-indicator { font-size: 11px; color: var(--secondary); font-family: monospace; opacity: 0; transition: opacity 0.3s; }
+    .saving-indicator.show { opacity: 1; }
+
+    /* FULLSCREEN APP VIEWER (IFRAME) */
+    #app-viewer {
+      display: none; position: fixed; inset: 0; z-index: 2000;
+      background: #fff; flex-direction: column;
+    }
+    .viewer-header {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 18px; background: var(--primary); color: #fff;
+      border-bottom: 3px solid var(--secondary);
+    }
+    .btn-back-viewer {
+      background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.4); color: #fff;
+      padding: 7px 14px; border-radius: 6px; font-weight: bold; font-size: 13px; cursor: pointer;
+    }
+    .btn-back-viewer:hover { background: rgba(255,255,255,0.3); }
+    .viewer-title { font-size: 15px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    #viewer-frame { flex: 1; width: 100%; border: none; }
+
+    /* Overlay Sidebar Mobile */
+    .sidebar-backdrop {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 90;
+    }
+    .sidebar-backdrop.show { display: block; }
+
+    @media (max-width: 768px) {
+      .sidebar { position: fixed; height: 100vh; transform: translateX(-100%); width: 280px;}
+      .sidebar.show { transform: translateX(0); }
+      .grid { grid-template-columns: 1fr; }
+      main { padding: 20px; }
+    }
+  </style>
+</head>
+
+<body>
+  
+  <!-- POPUP MODAL LOGIN -->
+  <div id="login-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+      <h3 style="margin-top: 0; color: var(--primary);">🔒 SUPER ADMIN LOGIN</h3>
+      <p id="login-error" style="color: #ef4444; font-size: 13px; display: none; margin-bottom: 10px; font-weight: bold;">[!] Username atau Password salah!</p>
+      
+      <input type="text" id="login-user" placeholder="Username" class="modal-input" autocomplete="off">
+      <input type="password" id="login-pass" placeholder="Password" class="modal-input">
+      
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="closeLoginModal()">Batal</button>
+        <button class="btn-submit" onclick="submitLogin()" id="btn-login-submit">Login</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FULLSCREEN APP VIEWER (Agar Form Uji tetap terbuka di dalam aplikasi) -->
+  <div id="app-viewer">
+    <div class="viewer-header">
+      <button class="btn-back-viewer" onclick="closeAppViewer()">← Kembali ke Launcher</button>
+      <div class="viewer-title" id="viewer-title">Memuat Instrumen...</div>
+    </div>
+    <iframe id="viewer-frame" src=""></iframe>
+  </div>
+
+  <div class="sidebar-backdrop" id="sidebar-backdrop" onclick="toggleSidebar()"></div>
+
+  <div class="app-container">
+    <nav class="sidebar" id="sidebar">
+      <div class="sidebar-header brand">
+        <div class="brand-icon">⚙️</div>
+        <div>
+          <h2>C&I UMRO JP-1</h2>
+          <div class="sys-status"><span class="pulse"></span> SYSTEM NORMAL</div>
+        </div>
+      </div>
+      
+      <div class="user-badge" id="user-badge">
+        <div class="user-role role-user">FIELD_TECH // GUEST</div>
+      </div>
+
+      <div class="telemetry-panel">
+        <div class="telemetry-row"><span>MAIN VOLT</span><strong id="live-volt" class="mono-value">220.1 VAC</strong></div>
+        <div class="telemetry-row"><span>GRID FREQ</span><strong id="live-freq" class="mono-value">50.00 Hz</strong></div>
+        <div class="telemetry-row"><span>CAB TEMP</span><strong id="live-temp" class="mono-value">24.5 °C</strong></div>
+      </div>
+      
+      <div class="sidebar-menu" id="sidebar-menu">
+        <p style="padding: 20px; color: var(--text-muted);">Memuat instrumen...</p>
+      </div>
+    </nav>
+
+    <div class="main-content">
+      <header class="header" id="main-header">
+        <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
+        
+        <div class="top-actions">
+          <button id="btn-login-trigger" class="auth-btn" onclick="openLoginModal()">Login Admin</button>
+          <button id="btn-logout" class="auth-btn logout-btn" onclick="doLogout()" style="display: none;">Logout</button>
+        </div>
+      </header>
+
+      <main>
+        <div id="welcome-banner" class="welcome-message" style="display: none; margin-bottom: 30px;">
+          <h2>TERMINAL MAINTENANCE I&C</h2>
+          <div class="pid-line"></div>
+          <p>Pilih navigasi unit di panel kiri atau gunakan kolom pencarian di bawah untuk mengakses instrumen.</p>
+        </div>
+
+        <div id="content-header" style="display: none; margin-bottom: 25px;">
+          <h1 id="page-title">FORM UJI</h1>
+          <p id="page-subtitle">LOKASI / UNIT: MUARA KARANG</p>
+          <div class="pid-line" style="margin-top: 15px;"></div>
+        </div>
+
+        <div class="toolbar" id="toolbar" style="display: none;">
+          <input id="search" class="search" type="search" placeholder="🔍 Cari Tag, Instrumen, atau Deskripsi..." oninput="filterApps()">
+        </div>
+
+        <div id="grid" class="grid"></div>
+
+        <div id="empty" class="empty" style="display: none;">⚠ INSTRUMEN TIDAK DITEMUKAN</div>
+
+        <p id="status" class="status">Mengambil data server...</p>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    // =========================================================================
+    // PASTE URL WEB APP APPS SCRIPT LAUNCHER ANDA DI SINI:
+    const API_URL = "https://script.google.com/macros/s/AKfycbyoTnPgoF-DGIxg_YLcq1nNLeXN4yizNt1o0p-Q9_NoUL1Q8zzfIEsDakY8FN99HSomZg/exec";
+    // =========================================================================
+
+    let allData = {};
+    let currentActiveItems = [];
+    let allAppsFlat = [];
+    let currentUserInfo = { isAdmin: false };
+
+    function initApp() {
+      updateUserBadge();
+      loadData();
+    }
+
+    // --- FUNGSI LOGIN / LOGOUT MODAL ---
+    function openLoginModal() {
+      document.getElementById('login-modal').style.display = 'flex';
+      document.getElementById('login-error').style.display = 'none';
+      document.getElementById('login-user').value = '';
+      document.getElementById('login-pass').value = '';
+    }
+
+    function closeLoginModal() {
+      document.getElementById('login-modal').style.display = 'none';
+    }
+
+    function submitLogin() {
+      const user = document.getElementById('login-user').value;
+      const pass = document.getElementById('login-pass').value;
+      const btn = document.getElementById('btn-login-submit');
+      
+      btn.textContent = 'Mengecek...';
+      btn.disabled = true;
+      
+      fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action: 'login', username: user, password: pass })
+      })
+      .then(res => res.json())
+      .then(res => {
+        btn.textContent = 'Login';
+        btn.disabled = false;
+        if (res.status === 'success' && res.isValid) {
+          currentUserInfo.isAdmin = true;
+          closeLoginModal();
+          document.getElementById('btn-login-trigger').style.display = 'none';
+          document.getElementById('btn-logout').style.display = 'block';
+          updateUserBadge();
+          renderCards(currentActiveItems);
+        } else {
+          document.getElementById('login-error').style.display = 'block';
+        }
+      })
+      .catch(err => {
+        btn.textContent = 'Login';
+        btn.disabled = false;
+        alert('Gagal terhubung ke server autentikasi.');
+      });
+    }
+
+    function doLogout() {
+      currentUserInfo.isAdmin = false;
+      document.getElementById('btn-login-trigger').style.display = 'block';
+      document.getElementById('btn-logout').style.display = 'none';
+      updateUserBadge();
+      renderCards(currentActiveItems);
+    }
+
+    function updateUserBadge() {
+      const roleDiv = document.querySelector('.user-role');
+      if(currentUserInfo.isAdmin) {
+        roleDiv.textContent = 'SUPER_ADMIN // GRANTED';
+        roleDiv.className = 'user-role role-admin';
+      } else {
+        roleDiv.textContent = 'FIELD_TECH // GUEST';
+        roleDiv.className = 'user-role role-user';
+      }
+    }
+
+    // --- LOGIKA UTAMA (LOAD & RENDER) ---
+    function loadData() {
+      const status = document.getElementById('status');
+      status.style.display = 'block';
+      
+      fetch(API_URL)
+        .then(res => res.json())
+        .then(res => {
+          if (res.status === 'success') {
+            allData = res.data || {};
+            flattenData();
+            buildSidebar();
+            showHome();
+            status.style.display = 'none';
+            simulateTelemetry();
+          } else {
+            status.textContent = 'Gagal memuat data server.';
+          }
+        })
+        .catch(error => {
+          status.textContent = 'Gagal memuat data server. Periksa koneksi internet.';
+          console.error(error);
+        });
+    }
+
+    function simulateTelemetry() {
+      setInterval(() => {
+        const voltObj = document.getElementById('live-volt');
+        const freqObj = document.getElementById('live-freq');
+        const tempObj = document.getElementById('live-temp');
+        
+        if(voltObj) voltObj.textContent = (220 + (Math.random() * 1.5 - 0.75)).toFixed(1) + ' VAC';
+        if(freqObj) freqObj.textContent = (50 + (Math.random() * 0.08 - 0.04)).toFixed(2) + ' Hz';
+        if(tempObj) tempObj.textContent = (24 + (Math.random() * 0.6 - 0.3)).toFixed(1) + ' °C';
+      }, 2500);
+    }
+
+    function flattenData() {
+      allAppsFlat = [];
+      for (const mainCategory in allData) {
+        for (const unit in allData[mainCategory]) {
+          for (const subUnit in allData[mainCategory][unit]) {
+             const items = allData[mainCategory][unit][subUnit];
+             items.forEach(function(item) {
+               item.unitName = unit + ' • ' + subUnit; 
+               allAppsFlat.push(item);
+             });
+          }
+        }
+      }
+    }
+
+    function buildSidebar() {
+      const menuContainer = document.getElementById('sidebar-menu');
+      menuContainer.innerHTML = '';
+
+      const homeDiv = document.createElement('div');
+      homeDiv.className = 'menu-group';
+      const homeTitle = document.createElement('div');
+      homeTitle.className = 'menu-title home-menu';
+      homeTitle.innerHTML = '🏠 DASHBOARD GLOBAL';
+      homeTitle.onclick = function() {
+        showHome();
+        if(window.innerWidth <= 768) { toggleSidebar(false); }
+      };
+      homeDiv.appendChild(homeTitle);
+      menuContainer.appendChild(homeDiv);
+
+      for (const mainCategory in allData) {
+        const groupDiv = document.createElement('div');
+        groupDiv.className = 'menu-group';
+        
+        const titleDiv = document.createElement('div');
+        titleDiv.className = 'menu-title';
+        titleDiv.textContent = mainCategory;
+        titleDiv.onclick = function() { groupDiv.classList.toggle('active'); };
+
+        const submenuDiv = document.createElement('div');
+        submenuDiv.className = 'submenu';
+
+        const units = allData[mainCategory];
+        const sortedUnits = Object.keys(units).sort();
+        
+        for (let i = 0; i < sortedUnits.length; i++) {
+          const unitName = sortedUnits[i];
+          const unitGroupDiv = document.createElement('div');
+          unitGroupDiv.className = 'submenu-group';
+          
+          const unitTitleDiv = document.createElement('div');
+          unitTitleDiv.className = 'submenu-title';
+          unitTitleDiv.textContent = unitName;
+          unitTitleDiv.onclick = function(e) { e.stopPropagation(); unitGroupDiv.classList.toggle('active'); };
+          
+          const subSubmenuDiv = document.createElement('div');
+          subSubmenuDiv.className = 'sub-submenu';
+          
+          const subUnits = units[unitName];
+          const sortedSubUnits = Object.keys(subUnits).sort();
+          
+          for (let j = 0; j < sortedSubUnits.length; j++) {
+             const subUnitName = sortedSubUnits[j];
+             const itemDiv = document.createElement('div');
+             itemDiv.className = 'sub-submenu-item';
+             itemDiv.textContent = subUnitName;
+             
+             itemDiv.onclick = function(e) {
+               e.stopPropagation();
+               document.querySelectorAll('.sub-submenu-item').forEach(el => el.classList.remove('active'));
+               document.querySelector('.home-menu').classList.remove('active-home');
+               itemDiv.classList.add('active');
+               showContent(mainCategory, unitName + ' - ' + subUnitName, subUnits[subUnitName]);
+               if(window.innerWidth <= 768) { toggleSidebar(false); }
+             };
+             subSubmenuDiv.appendChild(itemDiv);
+          }
+          unitGroupDiv.appendChild(unitTitleDiv);
+          unitGroupDiv.appendChild(subSubmenuDiv);
+          submenuDiv.appendChild(unitGroupDiv);
+        }
+        groupDiv.appendChild(titleDiv);
+        groupDiv.appendChild(submenuDiv);
+        menuContainer.appendChild(groupDiv);
+      }
+    }
+
+    function showHome() {
+      document.querySelectorAll('.sub-submenu-item').forEach(el => el.classList.remove('active'));
+      const homeBtn = document.querySelector('.home-menu');
+      if(homeBtn) homeBtn.classList.add('active-home');
+
+      document.getElementById('content-header').style.display = 'none';
+      const welcomeBanner = document.getElementById('welcome-banner');
+      if(welcomeBanner) welcomeBanner.style.display = 'block';
+      
+      document.getElementById('toolbar').style.display = 'flex';
+      document.getElementById('search').value = ''; 
+      currentActiveItems = allAppsFlat; 
+      renderCards(allAppsFlat);
+    }
+
+    function showContent(mainCategory, subCategory, items) {
+      document.getElementById('content-header').style.display = 'block';
+      document.getElementById('page-title').textContent = mainCategory;
+      document.getElementById('page-subtitle').textContent = 'LOKASI / UNIT: ' + subCategory;
+      
+      const welcomeBanner = document.getElementById('welcome-banner');
+      if(welcomeBanner) welcomeBanner.style.display = 'none';
+
+      document.getElementById('toolbar').style.display = 'flex';
+      document.getElementById('search').value = '';
+      currentActiveItems = items; 
+      renderCards(items);
+    }
+
+    function openAppViewer(url, title) {
+      // Jika URL adalah link eksternal non-Apps Script (misal OneDrive), buka di tab baru
+      if (!url.includes('script.google.com')) {
+        window.open(url, '_blank');
+        return;
+      }
+      // Jika URL adalah Web App Apps Script, buka di dalam Fullscreen Viewer agar tidak keluar dari PWA
+      document.getElementById('viewer-title').textContent = title;
+      document.getElementById('viewer-frame').src = url;
+      document.getElementById('app-viewer').style.display = 'flex';
+    }
+
+    function closeAppViewer() {
+      document.getElementById('app-viewer').style.display = 'none';
+      document.getElementById('viewer-frame').src = '';
+    }
+
+    function renderCards(itemsToRender) {
+      const grid = document.getElementById('grid');
+      grid.innerHTML = '';
+
+      if (!itemsToRender || itemsToRender.length === 0) {
+        document.getElementById('empty').style.display = 'block';
+        return;
+      }
+
+      let renderedCount = 0;
+
+      itemsToRender.forEach(function(app) {
+        if (!currentUserInfo.isAdmin && app.active === false) {
+          return; 
+        }
+
+        renderedCount++;
+        const configured = app.url && (app.url.startsWith('http') || app.url.startsWith('https'));
+
+        const card = document.createElement('div');
+        card.className = 'card';
+        if(app.active === false) card.classList.add('inactive'); 
+
+        const top = document.createElement('div');
+        top.className = 'card-top';
+
+        const icon = document.createElement('div');
+        icon.className = 'app-icon ' + (app.color || 'blue');
+        icon.textContent = app.icon || '⚙️';
+
+        const category = document.createElement('span');
+        category.className = 'category';
+        category.textContent = app.unitName ? `TAG: ${app.unitName}` : `TAG: ${app.category || 'SYS'}`;
+
+        top.append(icon, category);
+
+        const title = document.createElement('h3');
+        title.textContent = app.name;
+
+        const description = document.createElement('p');
+        description.className = 'description';
+        description.textContent = app.description || '';
+
+        const link = document.createElement('a');
+        link.className = 'open-link' + (configured ? '' : ' disabled');
+        
+        if (app.active === false) {
+           link.textContent = 'FORM DISABLED';
+           link.classList.add('disabled');
+        } else {
+           link.textContent = configured ? 'EKSEKUSI FORM ↗' : 'NO CONNECTION';
+        }
+
+        if (configured && app.active !== false) {
+          link.href = '#';
+          link.onclick = (e) => {
+            e.preventDefault();
+            openAppViewer(app.url, app.name);
+          };
+        } else {
+          link.href = '#';
+          link.onclick = (e) => {
+             e.preventDefault();
+             if(app.active === false) alert('Form ini sedang dinonaktifkan oleh Admin.');
+             else alert('Koneksi instrumen (URL) belum diatur.');
+          };
+        }
+
+        card.append(top, title, description, link);
+
+        // KONTROL ADMIN
+        if (currentUserInfo.isAdmin) {
+           const adminControls = document.createElement('div');
+           adminControls.className = 'admin-controls';
+
+           const toggleLabel = document.createElement('span');
+           toggleLabel.className = 'toggle-label';
+           toggleLabel.textContent = app.active ? 'STATUS: ONLINE' : 'STATUS: OFFLINE';
+           if(app.active === false) toggleLabel.style.color = '#ef4444';
+
+           const savingIndicator = document.createElement('span');
+           savingIndicator.className = 'saving-indicator';
+           savingIndicator.textContent = 'Saving...';
+           savingIndicator.id = 'saving-' + app.id;
+
+           const labelRight = document.createElement('div');
+           labelRight.style.display = 'flex';
+           labelRight.style.alignItems = 'center';
+           labelRight.style.gap = '10px';
+
+           const toggleSwitch = document.createElement('label');
+           toggleSwitch.className = 'toggle-switch';
+
+           const checkbox = document.createElement('input');
+           checkbox.type = 'checkbox';
+           checkbox.checked = app.active;
+           
+           const slider = document.createElement('span');
+           slider.className = 'slider';
+
+           checkbox.addEventListener('change', function() {
+              const isActive = this.checked;
+              savingIndicator.classList.add('show');
+              
+              fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({ action: 'toggle', appId: app.id, isActive: isActive })
+              })
+              .then(res => res.json())
+              .then(res => {
+                savingIndicator.classList.remove('show');
+                if (res.status === 'success') {
+                  app.active = isActive; 
+                  if(isActive) {
+                     card.classList.remove('inactive');
+                     toggleLabel.textContent = 'STATUS: ONLINE';
+                     toggleLabel.style.color = 'var(--text-muted)';
+                     if(configured) {
+                        link.textContent = 'EKSEKUSI FORM ↗';
+                        link.classList.remove('disabled');
+                        link.onclick = (e) => { e.preventDefault(); openAppViewer(app.url, app.name); };
+                     }
+                  } else {
+                     card.classList.add('inactive');
+                     toggleLabel.textContent = 'STATUS: OFFLINE';
+                     toggleLabel.style.color = '#ef4444';
+                     link.textContent = 'FORM DISABLED';
+                     link.classList.add('disabled');
+                     link.onclick = (e) => { e.preventDefault(); alert('Form dinonaktifkan.'); };
+                  }
+                } else {
+                  throw new Error();
+                }
+              })
+              .catch(err => {
+                savingIndicator.classList.remove('show');
+                alert("Gagal menyimpan perubahan. Coba lagi.");
+                checkbox.checked = !isActive; 
+              });
+           });
+
+           toggleSwitch.appendChild(checkbox);
+           toggleSwitch.appendChild(slider);
+           
+           labelRight.appendChild(savingIndicator);
+           labelRight.appendChild(toggleSwitch);
+
+           adminControls.appendChild(toggleLabel);
+           adminControls.appendChild(labelRight);
+
+           card.appendChild(adminControls);
+        }
+
+        grid.appendChild(card);
+      });
+
+      if (renderedCount === 0) { document.getElementById('empty').style.display = 'block'; } 
+      else { document.getElementById('empty').style.display = 'none'; }
+    }
+
+    function filterApps() {
+      const keyword = document.getElementById('search').value.toLowerCase().trim();
+      if (!keyword) { renderCards(currentActiveItems); return; }
+      
+      const filtered = currentActiveItems.filter(app => 
+        app.name.toLowerCase().includes(keyword) || 
+        (app.description && app.description.toLowerCase().includes(keyword)) ||
+        (app.unitName && app.unitName.toLowerCase().includes(keyword))
+      );
+      renderCards(filtered);
+    }
+
+    function toggleSidebar(forceState) {
+      const sidebar = document.getElementById('sidebar');
+      const backdrop = document.getElementById('sidebar-backdrop');
+      if (typeof forceState === 'boolean') {
+        sidebar.classList.toggle('show', forceState);
+        backdrop.classList.toggle('show', forceState);
+      } else {
+        sidebar.classList.toggle('show');
+        backdrop.classList.toggle('show');
+      }
+    }
+
+    initApp();
+  </script>
+</body>
+</html>
