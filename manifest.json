@@ -1,17 +1,24 @@
 {
   "name": "LAUNCHER I&C",
   "short_name": "I&C UMRO JP-1",
-  "start_url": "./index.html",
+  "start_url": "./",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#F0F4F8",
   "theme_color": "#0F4C81",
   "orientation": "portrait",
   "icons": [
     {
-      "src": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='112' fill='%230F4C81'/><circle cx='256' cy='256' r='165' fill='%230F172A' stroke='%2338BDF8' stroke-width='20'/><path d='M136 256 A120 120 0 0 1 376 256' fill='none' stroke='%230284C7' stroke-width='24' stroke-linecap='round'/><path d='M310 148 A120 120 0 0 1 376 256' fill='none' stroke='%23F59E0B' stroke-width='24' stroke-linecap='round'/><line x1='256' y1='256' x2='335' y2='175' stroke='%23EF4444' stroke-width='18' stroke-linecap='round'/><circle cx='256' cy='256' r='26' fill='%23F8FAFC'/><rect x='226' y='405' width='60' height='36' rx='6' fill='%2394A3B8'/></svg>",
+      "src": "https://cdn-icons-png.flaticon.com/512/900/900797.png",
       "sizes": "512x512",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/900/900797.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }
