@@ -4,19 +4,19 @@
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#F0F4F8",
+  "background_color": "#0F4C81",
   "theme_color": "#0F4C81",
   "orientation": "portrait",
   "icons": [
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/900/900797.png",
+      "src": "./icon.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/900/900797.png",
-      "sizes": "192x192",
+      "src": "./icon.png",
+      "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
     }
